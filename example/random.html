@@ -11,12 +11,14 @@
 <script>
 
 var array = []
+var pristine = []
 for(var i = 0; i < 30; i++) {
     var v = Math.random() * 2 - 1
     var b = array[array.length - 1]
     if(!b)
       b = 0
 
+    pristine.push({x: i*50, y:b,set:'p'})
     for(j = 0; j < 50; j++)
       array.push(b + j*v + 10*Math.random() - 5)
 }
@@ -29,7 +31,7 @@ var linechart = gg({
 });
 
 $(document).ready(function() {
-    var data = orig.concat(l1tf(array, 1000).map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
+    var data = orig.concat(pristine).concat(l1tf(array, 1000).map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
     linechart.render(600, 400, d3.select('#examples'), data)
 });
 </script>
