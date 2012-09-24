@@ -19,8 +19,11 @@ for(var i = 0; i < 30; i++) {
       b = 0
 
     pristine.push({x: i*50, y:b,set:'p'})
-    for(j = 0; j < 50; j++)
-      array.push(b + j*v + 10*Math.random() - 5)
+    for(j = 0; j < 50; j++) {
+      b += v
+      b += 20*Math.random() - 10
+      array.push(b)
+    }
 }
 
 var orig = array.map(function(y,x){return {x:x,y:y,set:'o'}})
@@ -31,7 +34,7 @@ var linechart = gg({
 });
 
 $(document).ready(function() {
-    var data = orig.concat(pristine).concat(l1tf(array, 1000).map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
+    var data = orig.concat(pristine).concat(l1tf(array, 5000).map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
     linechart.render(600, 400, d3.select('#examples'), data)
 });
 </script>
