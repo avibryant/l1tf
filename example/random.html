@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="lib/gg.css"/>
+<script src="lib/jquery-1.7.2.min.js"></script>
+<script src="lib/d3.v2.min.js"></script>
+<script src="lib/underscore-min.js"></script>
+<script src="lib/gg.js"></script>
+<script src="../l1tf.js"></script>
+<script>
+
+var array = []
+for(var i = 0; i < 30; i++) {
+    var v = Math.random() * 2 - 1
+    var b = array[array.length - 1]
+    if(!b)
+      b = 0
+
+    for(j = 0; j < 50; j++)
+      array.push(b + j*v + 10*Math.random() - 5)
+}
+
+var orig = array.map(function(y,x){return {x:x,y:y,set:'o'}})
+var linechart = gg({
+    layers: [
+        { geometry: 'line', mapping: { x: 'x', y: 'y',group:'set',color:'set'}, size: 0.5 },
+    ],
+});
+
+$(document).ready(function() {
+    var data = orig.concat(l1tf(array, 1000).map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
+    linechart.render(600, 400, d3.select('#examples'), data)
+});
+</script>
+</head>
+<body>
+<div id='examples'></div>
+
+</body>
+</html>
