@@ -60,14 +60,57 @@ var l1tf = (function() {
   }
 
   Point.prototype.computeErr = function(dy) {
-    var yp = this.y + dy
-    var err = this.errorA(yp)
+    var y = this.y + dy
+    var x = this.x
+    var err = 0
+
+    var px, py, pxd, pyd, pslope, nx, ny, nyd, nxd, nslope
+
+    if(this.prev) {
+      px = this.prev.x
+      py = this.prev.y
+      pxd = x - px
+      pyd = y - py
+      pslope = pyd/pxd
+    }
+
+    if(this.next) {
+      nx = this.next.x
+      ny = this.next.y
+      nxd = x - nx
+      nyd = y - ny
+      nslope = nyd/nxd
+    }
+
     if(this.prev && this.next)
-      err += this.errorBCD(yp, this.prev, this.next)
+      err += Math.abs(pslope - nslope)
     if(this.prev && this.prev.prev)
-      err += this.errorBCD(yp, this.prev, this.prev.prev)
+      err += Math.abs((y - this.prev.prev.y) / (x - this.prev.prev.x) - pslope)
     if(this.next && this.next.next)
-      err += this.errorBCD(yp, this.next, this.next.next)
+      err += Math.abs(nslope - (y - this.next.next.y) / (x - this.next.next.x))
+
+    err *= this.opt.m
+
+    var ryd = this.opt.real[x] - y
+    err += ryd*ryd
+    
+    if(this.prev) {
+      var j = px
+      while(j < x) {
+        var d = this.opt.real[j] - (py + pslope*(j-px))
+        err += d*d
+        j++
+      }
+    }
+    if(this.next) {
+      var j = x + 1
+      while(j <= nx) {
+        var d = this.opt.real[j] - (ny + nslope*(j-nx))
+        err += d*d
+        j++
+      }
+    }
+
     return err
   }
 
@@ -78,33 +121,6 @@ var l1tf = (function() {
       this.err = errDelta
       this.linear = linear
     }
-  }
-
-  Point.prototype.errorA = function(yp) {
-    var err = Math.pow(this.opt.real[this.x] - yp, 2)
-    if(this.prev) {
-      var lx = this.prev.x
-      var ly = this.prev.y
-      var j = lx
-      while(j < this.x) {
-        err += Math.pow(this.opt.real[j] - (ly + (yp - ly)*(j-lx)/(this.x - lx)), 2)
-        j++
-      }
-    }
-    if(this.next) {
-      var rx = this.next.x
-      var ry = this.next.y
-      var j = this.x + 1
-      while(j <= rx) {
-        err += Math.pow(this.opt.real[j] - (ry + (yp - ry)*(j - rx)/(this.x - rx)), 2)
-        j++
-      }
-    }
-    return err / 2
-  }
-
-  Point.prototype.errorBCD = function(yp, l, r) {
-    return this.opt.m * Math.abs(-1 * (yp - l.y) / (this.x - l.x) + (yp - r.y) / (this.x - r.x)) / 2
   }
  
   Point.prototype.move = function() {
