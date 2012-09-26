@@ -12,8 +12,14 @@
 
 var array = []
 var pristine = []
+var v
+var magnitude
 for(var i = 0; i < 30; i++) {
-    var v = Math.random() * 2 - 1
+    if(i % 2 == 0 || !v)
+      v = Math.random() * 2 - 1
+
+    if(i % 2 == 1 || !magnitude)
+      magnitude = 20*Math.random()
     var b = array[array.length - 1]
     if(!b)
       b = 0
@@ -21,7 +27,7 @@ for(var i = 0; i < 30; i++) {
     pristine.push({x: i*50, y:b,set:'p'})
     for(j = 0; j < 50; j++) {
       b += v
-      b += 20*Math.random() - 10
+      b += magnitude*(Math.random() - 0.5)
       array.push(b)
     }
 }
