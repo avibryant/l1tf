@@ -1,4 +1,5 @@
 var l1tf = (function() {
+  var errTime = 0
 
   function l1tf(array, m) {
     var d1 = new Date()
@@ -9,7 +10,8 @@ var l1tf = (function() {
       opt.iterate()
     }
     console.log(opt.iterations + " iterations")
-    console.log(opt.errTime + "ms computing error")
+    console.log(errTime + "ms computing error")
+    console.log(opt.totalError() + " total error")
     return opt.points() 
   }
 
@@ -38,8 +40,8 @@ var l1tf = (function() {
     var d1 = new Date()
 
     this.err = null
-    this.baseErr = this.computeErr(0)
-    var lin = 0
+    this.baseErr = this.computeErr(0,0)
+    var linDy = 0
 
     if(this.prev && this.next)
       linDy = this.linearDy(this.prev, this.next)
@@ -48,74 +50,85 @@ var l1tf = (function() {
     else
       linDy = this.linearDy(this.next, this.next.next)
 
-    this.tryMove(linDy / 4, false)
-    this.tryMove(linDy / 2, false)
-    this.tryMove(linDy, true)
-    this.tryMove(linDy * -1, false)
-    this.tryMove(linDy / -2, false)
-    this.tryMove(linDy / -4, false)
+    this.tryMove(linDy / 4, 0, false)
+    this.tryMove(linDy / 2, 0, false)
+    this.tryMove(linDy, 0, true)
+    this.tryMove(linDy / -2, 0, false)
+    this.tryMove(linDy / -4, 0, false)
 
     var d2 = new Date()
-    this.opt.errTime += (d2 - d1)
+    errTime += (d2 - d1)
   }
 
-  Point.prototype.computeErr = function(dy) {
+  Point.prototype.computeErr = function(dy,dx) {
+    var real = this.opt.real
     var y = this.y + dy
-    var x = this.x
-    var err = 0
+    var x = this.x + dx
+    var yd = real[x] - y
+    var err = yd*yd
+    var m = this.opt.m
 
-    var px, py, pxd, pyd, pslope, nx, ny, nyd, nxd, nslope
+    var pslope, nslope
 
     if(this.prev) {
-      px = this.prev.x
-      py = this.prev.y
-      pxd = x - px
-      pyd = y - py
+      var px = this.prev.x
+      var py = this.prev.y
+      var pxd = x - px
+      var pyd = y - py
       pslope = pyd/pxd
-    }
-
-    if(this.next) {
-      nx = this.next.x
-      ny = this.next.y
-      nxd = x - nx
-      nyd = y - ny
-      nslope = nyd/nxd
-    }
-
-    if(this.prev && this.next)
-      err += Math.abs(pslope - nslope)
-    if(this.prev && this.prev.prev)
-      err += Math.abs((y - this.prev.prev.y) / (x - this.prev.prev.x) - pslope)
-    if(this.next && this.next.next)
-      err += Math.abs(nslope - (y - this.next.next.y) / (x - this.next.next.x))
-
-    err *= this.opt.m
-
-    var ryd = this.opt.real[x] - y
-    err += ryd*ryd
-    
-    if(this.prev) {
+ 
       var j = px
       while(j < x) {
-        var d = this.opt.real[j] - (py + pslope*(j-px))
+        var d = real[j] - (py + pslope*(j-px))
         err += d*d
         j++
+      }
+
+      if(this.prev.prev) {
+        var ppslope = (y - this.prev.prev.y) / (x - this.prev.prev.x)
+        var dslope = ppslope - pslope
+        if(dslope < 0)
+          dslope *= -1
+        err += m * dslope
       }
     }
+
     if(this.next) {
+      var nx = this.next.x
+      var ny = this.next.y
+      var nxd = x - nx
+      var nyd = y - ny
+      nslope = nyd/nxd
+
       var j = x + 1
       while(j <= nx) {
-        var d = this.opt.real[j] - (ny + nslope*(j-nx))
+        var d = real[j] - (ny + nslope*(j-nx))
         err += d*d
         j++
       }
+
+      if(this.next.next) {
+        var nnslope = (y - this.next.next.y) / (x - this.next.next.x)
+        var dslope = nslope - nnslope
+        if(dslope < 0)
+          dslope *= -1        
+        err += m * dslope
+      }
+    }
+
+    if(this.prev && this.next) {
+      var dslope = pslope - nslope
+      if(dslope < 0)
+        dslope *= -1        
+
+      err += m * dslope
     }
 
     return err
   }
 
-  Point.prototype.tryMove = function(dy, linear) {
-    var errDelta = this.computeErr(dy) - this.baseErr
+  Point.prototype.tryMove = function(dy, dx, linear) {
+    var errDelta = this.computeErr(dy, dx) - this.baseErr
     if(!this.err || errDelta < this.err) {
       this.dy = dy
       this.err = errDelta
@@ -257,7 +270,6 @@ var l1tf = (function() {
 
   function Optimizer(array, m) {
     this.iterations = 0
-    this.errTime = 0
     this.real = array
     this.m = m
 
@@ -362,6 +374,21 @@ var l1tf = (function() {
       point = point.next
     }
     return array
+  }
+
+  Optimizer.prototype.totalError = function() {
+    var err = 0
+    var point = this.first
+    while(point) {
+      err += point.computeErr(0,0)
+      var d = (point.y - this.real[point.x])
+      err -= (d*d)
+      if(point.prev && point.next)
+        err -= (d*d)
+      point = point.next
+    }
+
+    return err
   }
 
   return l1tf;
