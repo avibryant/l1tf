@@ -391,6 +391,23 @@ var l1tf = (function() {
     return err
   }
 
+  Optimizer.prototype.totalError2 = function() {
+    var err = 0
+    var point = this.first
+    while(point) {
+      err += 2 * Math.pow(point.y - this.real[point.x], 2)
+      if(point.next)
+      for(var j = point.x + 1; j < point.next.x; j += 1){
+        err += 2 * Math.pow( point.y + j*(point.next.y - point.y)/(point.next.x - point.x) - this.real[point.x + j], 2)
+      }
+      if(point.next && point.prev){
+        //err += this.m * Math.abs( point.y - (point.prev.y - point.y)/(point.prev.x - point.x) + point.y + (point.next.y - point.y)/(point.next.x - point.x) - 2*point.y)
+        err += this.m * Math.abs( - (point.prev.y - point.y)/(point.prev.x - point.x) + (point.next.y - point.y)/(point.next.x - point.x) )
+      }
+    }
+    return err
+  }
+
   return l1tf;
 })()
 
