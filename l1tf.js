@@ -6,7 +6,7 @@ var l1tf = (function() {
       opt.iterate()
     }
 
-    return {points: opt.points(), iterations: opt.iterations, errDelta: opt.errDelta, errTime: opt.errTime}
+    return {points: opt.points(), iterations: opt.iterations, errDelta: opt.errDelta, errTime: opt.errTime, err: opt.totalError()}
   }
 
   function Point(x,y,opt) {
@@ -403,6 +403,7 @@ var l1tf = (function() {
         //err += this.m * Math.abs( point.y - (point.prev.y - point.y)/(point.prev.x - point.x) + point.y + (point.next.y - point.y)/(point.next.x - point.x) - 2*point.y)
         err += this.m * Math.abs( - (point.prev.y - point.y)/(point.prev.x - point.x) + (point.next.y - point.y)/(point.next.x - point.x) )
       }
+      point = point.next
     }
     return err
   }
