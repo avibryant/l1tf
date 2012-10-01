@@ -52,7 +52,7 @@ var l1tf = (function() {
 
     this.tryMove(linDy / 4, 0, false)
     this.tryMove(linDy / 2, 0, false)
-    this.tryMove(linDy, 0, true)
+    this.tryMove(linDy, 0, this.next && this.prev)
     this.tryMove(linDy / -2, 0, false)
     this.tryMove(linDy / -4, 0, false)
 
