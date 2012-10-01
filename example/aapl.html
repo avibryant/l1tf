@@ -20,7 +20,7 @@ var linechart = gg({
 });
 
 $(document).ready(function() {
-    var data = orig.concat(l1tf(array, 25000).map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
+    var data = orig.concat(l1tf(array, 25000).points.map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
     linechart.render(600, 400, d3.select('#examples'), data)
 });
 </script>

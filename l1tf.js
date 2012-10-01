@@ -1,18 +1,12 @@
 var l1tf = (function() {
-  var errTime = 0
-
   function l1tf(array, m) {
-    var d1 = new Date()
     var opt = new Optimizer(array, m)
-    initTime = (new Date() - d1)
 
     for(var i = 0; i < (array.length * 5) && opt.getRoot().err < 0; i++) {
       opt.iterate()
     }
-    console.log(opt.iterations + " iterations")
-    console.log(errTime + "ms computing error")
-    console.log(opt.totalError() + " total error")
-    return opt.points() 
+
+    return {points: opt.points(), iterations: opt.iterations, errDelta: opt.errDelta, errTime: opt.errTime}
   }
 
   function Point(x,y,opt) {
@@ -50,14 +44,14 @@ var l1tf = (function() {
     else
       linDy = this.linearDy(this.next, this.next.next)
 
-    this.tryMove(linDy / 4, 0, false)
-    this.tryMove(linDy / 2, 0, false)
+//    this.tryMove(linDy / 4, 0, false)
+//    this.tryMove(linDy / 2, 0, false)
     this.tryMove(linDy, 0, true)
-    this.tryMove(linDy / -2, 0, false)
-    this.tryMove(linDy / -4, 0, false)
+ //   this.tryMove(linDy / -2, 0, false)
+ //   this.tryMove(linDy / -4, 0, false)
 
     var d2 = new Date()
-    errTime += (d2 - d1)
+    this.opt.errTime += (d2 - d1)
   }
 
   Point.prototype.computeErr = function(dy,dx) {
@@ -270,6 +264,8 @@ var l1tf = (function() {
 
   function Optimizer(array, m) {
     this.iterations = 0
+    this.errDelta = 0
+    this.errTime = 0
     this.real = array
     this.m = m
 
@@ -336,6 +332,9 @@ var l1tf = (function() {
 
   Optimizer.prototype.iterate = function() {
     var root = this.getRoot()
+
+    this.errDelta += root.err
+
     root.move()
     if(root.linear) {
       root.unlink()

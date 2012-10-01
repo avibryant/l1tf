@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="../l1tf.js"></script>
+<script>
+
+function RNG(seed) {
+  // LCG using GCC's constants
+  this.m = 0x100000000; // 2**32;
+  this.a = 1103515245;
+  this.c = 12345;
+
+  this.state = seed ? seed : Math.floor(Math.random() * (this.m-1));
+}
+RNG.prototype.nextInt = function() {
+  this.state = (this.a * this.state + this.c) % this.m;
+  return this.state;
+}
+RNG.prototype.nextFloat = function() {
+  // returns in range [0,1]
+  return this.nextInt() / (this.m - 1);
+}
+RNG.prototype.nextRange = function(start, end) {
+  // returns in range [start, end): including start, excluding end
+  // can't modulu nextInt because of weak randomness in lower bits
+  var rangeSize = end - start;
+  var randomUnder1 = this.nextInt() / this.m;
+  return start + Math.floor(randomUnder1 * rangeSize);
+}
+
+var rng = new RNG(32)
+
+function randomData() {
+  var array = []
+  var v
+  var magnitude
+  for(var i = 0; i < 30; i++) {
+      if(i % 2 == 0 || !v)
+        v = rng.nextFloat() * 2 - 1
+
+      if(i % 2 == 1 || !magnitude)
+        magnitude = 20*rng.nextFloat()
+      var b = array[array.length - 1]
+      if(!b)
+        b = 0
+
+      for(j = 0; j < 50; j++) {
+        b += v
+        b += magnitude*(rng.nextFloat() - 0.5)
+        array.push(b)
+      }
+  }
+  return array
+}
+
+var n = 100
+
+var totalErrDelta = 0
+var totalTime = 0
+var totalIterations = 0
+var baseline = -2.50889698933592e7 
+
+console.log("Performing " + n + " trials")
+for(var i = 0; i < n; i++) {
+  if(i % 100 == 0)
+    console.log(i)
+  var results = l1tf(randomData(), 5000)
+  totalErrDelta += (results.errDelta / baseline)
+  totalTime += results.errTime
+  totalIterations += results.iterations
+}
+
+console.log("Average time: " + (totalTime / n) + "ms")
+console.log("Average iterations: " + (totalIterations / n ))
+console.log("Average relative err delta: " + (totalErrDelta / n))
+</script>
+</head>
+<body>
+<div id='examples'></div>
+
+</body>
+</html>
