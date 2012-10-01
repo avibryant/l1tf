@@ -44,11 +44,11 @@ var l1tf = (function() {
     else
       linDy = this.linearDy(this.next, this.next.next)
 
-//    this.tryMove(linDy / 4, 0, false)
-//    this.tryMove(linDy / 2, 0, false)
-    this.tryMove(linDy, 0, true)
- //   this.tryMove(linDy / -2, 0, false)
- //   this.tryMove(linDy / -4, 0, false)
+    this.tryMove(linDy / 4, 0, false)
+    this.tryMove(linDy / 2, 0, false)
+    this.tryMove(linDy, 0, this.next && this.prev)
+    this.tryMove(linDy / -2, 0, false)
+    this.tryMove(linDy / -4, 0, false)
 
     var d2 = new Date()
     this.opt.errTime += (d2 - d1)
