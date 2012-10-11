@@ -1,8 +1,7 @@
 var l1tf = (function() {
   function l1tf(array, m) {
     var opt = new Optimizer(array, m)
-
-    for(var i = 0; i < (array.length * 5) && opt.getRoot().err < 0; i++) {
+    for(var i = 0; i < (array.length * 5) && opt.getRoot().err <= 0; i++) {
       opt.iterate()
     }
 
@@ -43,13 +42,19 @@ var l1tf = (function() {
       linDy = this.linearDy(this.prev.prev, this.prev)
     else
       linDy = this.linearDy(this.next, this.next.next)
+   
+    if(linDy == 0){
+      var scramble = 1
+    }else{
+      var scramble = linDy
+    } 
+    this.tryMove(scramble / 4, 0, false)
+    this.tryMove(scramble / 2, 0, false)
+    this.tryMove(scramble / -2, 0, false)
+    this.tryMove(scramble / -4, 0, false)
 
-    this.tryMove(linDy / 4, 0, false)
-    this.tryMove(linDy / 2, 0, false)
     this.tryMove(linDy, 0, this.next && this.prev)
-    this.tryMove(linDy / -2, 0, false)
-    this.tryMove(linDy / -4, 0, false)
-
+  
     var d2 = new Date()
     this.opt.errTime += (d2 - d1)
   }
