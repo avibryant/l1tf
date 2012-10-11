@@ -25,6 +25,11 @@ var l1tf = (function() {
   Point.prototype.right = null
   Point.prototype.linear = false
 
+  Point.prototype.lessThan = function(other) { 
+    return (this.err < other.err) ||
+      (this.err == other.err && this.linear)
+  }
+
   Point.prototype.linearDy = function(l, r) {
     return (l.y + (r.y - l.y) * (this.x - l.x) / (r.x - l.x)) - this.y
   }
@@ -206,7 +211,7 @@ var l1tf = (function() {
   }
 
   Point.prototype.bubbleUp = function() {
-    while(this.parent.err && (this.err < this.parent.err)) {
+    while(this.parent.err && (this.lessThan(this.parent))) {
       var p = this.parent
       var pl = p.left
       var pr = p.right
@@ -231,12 +236,12 @@ var l1tf = (function() {
   }
 
   Point.prototype.bubbleDown = function() {
-    while((this.left && this.left.err < this.err) || (this.right && this.right.err < this.err)) {
+    while((this.left && this.left.lessThan(this)) || (this.right && this.right.lessThan(this))) {
       var p = this.parent
       var r = this.right
       var l = this.left
       var np = null
-      if(r && r.err < l.err) {
+      if(r && r.lessThan(l)) {
         this.setLeft(r.left)
         this.setRight(r.right)
         r.setLeft(l)
