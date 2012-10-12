@@ -41,12 +41,18 @@ var l1tf = (function() {
     this.baseErr = this.computeErr(0,0)
     var linDy = 0
 
-    if(this.prev && this.next)
-      linDy = this.linearDy(this.prev, this.next)
-    else if(this.prev)
+    if(this.prev && this.prev.prev){
       linDy = this.linearDy(this.prev.prev, this.prev)
-    else
+      this.tryMove(linDy, 0, false)
+    }
+    if(this.next && this.next.next){
       linDy = this.linearDy(this.next, this.next.next)
+      this.tryMove(linDy, 0, false)
+    }
+    if(this.prev && this.next){
+      linDy = this.linearDy(this.prev, this.next)
+      this.tryMove(linDy, 0, true)
+    }
    
     if(linDy == 0){
       var scramble = 1
@@ -57,8 +63,6 @@ var l1tf = (function() {
     this.tryMove(scramble / 2, 0, false)
     this.tryMove(scramble / -2, 0, false)
     this.tryMove(scramble / -4, 0, false)
-
-    this.tryMove(linDy, 0, this.next && this.prev)
   
     var d2 = new Date()
     this.opt.errTime += (d2 - d1)
