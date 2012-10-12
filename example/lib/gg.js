@@ -588,7 +588,7 @@
     };
 
     function ColorScale() {
-        this.d3Scale = d3.scale.category20();
+        this.d3Scale = d3.scale.category10();
     }
 
     ColorScale.prototype = new CategoricalScale();
