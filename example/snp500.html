@@ -19,14 +19,19 @@ var linechart = gg({
     ],
 });
 
-$(document).ready(function() {
-    var data = orig.concat(l1tf(array, 50).points.map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
+function render() {
+  $("#examples").empty()
+   var data = orig.concat(l1tf(array, 5000 * $("#range").val() / 100).points.map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
     linechart.render(600, 400, d3.select('#examples'), data)
+}
+$(document).ready(function() {
+  render()
+  $("#range").change(render)
 });
 </script>
 </head>
 <body>
+<input id="range" type="range" value="10"/>
 <div id='examples'></div>
-
 </body>
 </html>
