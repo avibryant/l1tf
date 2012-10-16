@@ -21,7 +21,7 @@ var linechart = gg({
 
 function render() {
   $("#examples").empty()
-   var data = orig.concat(l1tf(array, 250000 * $("#range").val()).points.map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
+   var data = orig.concat(l1tf(array,$("#range").val()).points.map(function(ary){return {x:ary[0],y:ary[1],set:'f'}}))
     linechart.render(600, 400, d3.select('#examples'), data)
 }
 $(document).ready(function() {
