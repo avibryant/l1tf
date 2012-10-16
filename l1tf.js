@@ -281,7 +281,7 @@ var l1tf = (function() {
     this.errDelta = 0
     this.errTime = 0
     this.real = array
-    this.m = m
+    this.m = this.maxLambda()*m
 
     var prev = null
     var first = null
