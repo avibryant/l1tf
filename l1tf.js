@@ -41,14 +41,14 @@ var l1tf = (function() {
     this.baseErr = this.computeErr(0,0)
     var linDy = 0
 
-    if(this.prev && this.prev.prev){
-      linDy = this.linearDy(this.prev.prev, this.prev)
-      this.tryMove(linDy, 0, false)
-    }
-    if(this.next && this.next.next){
-      linDy = this.linearDy(this.next, this.next.next)
-      this.tryMove(linDy, 0, false)
-    }
+    // if(this.prev && this.prev.prev){
+    //   linDy = this.linearDy(this.prev.prev, this.prev)
+    //   this.tryMove(linDy, 0, false)
+    // }
+    // if(this.next && this.next.next){
+    //   linDy = this.linearDy(this.next, this.next.next)
+    //   this.tryMove(linDy, 0, false)
+    // }
     if(this.prev && this.next){
       linDy = this.linearDy(this.prev, this.next)
       this.tryMove(linDy, 0, true)
