@@ -312,6 +312,24 @@ var l1tf = (function() {
     return Math.ceil(Math.log(this.count+1)/Math.log(2)) - 1
   }
 
+  Optimizer.prototype.maxLambda = function() {
+    var n = this.real.length;
+    var xSum = (n - 1) * n / 2;
+    var x2Sum = (2*n - 1)* (n - 1) * n / 6
+    var ySum = 0
+    var yxSum = 0
+    this.real.forEach(function(y, x){ySum += y; yxSum += y*x})
+    var slope = (yxSum - ySum*xSum/n)/(x2Sum - xSum*xSum/n)
+    var constant = (ySum - xSum*slope)/n
+
+    var maxDiff = 0
+    for(var x = 0; x < n; x += 1){
+      maxDiff = Math.max(Math.abs(x*slope + constant - this.real[x]), maxDiff)
+    }
+
+    return maxDiff*6*n
+  }
+
   Optimizer.prototype.append = function(point) {
     var height = this.getHeight()
     var capacity = Math.pow(2, height+1) - 1
