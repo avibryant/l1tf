@@ -276,12 +276,12 @@ var l1tf = (function() {
       this.bubbleDown()
   }
 
-  function Optimizer(array, m) {
+  function Optimizer(array, smoothness) {
     this.iterations = 0
     this.errDelta = 0
     this.errTime = 0
     this.real = array
-    this.m = this.maxLambda()*m
+    this.m = this.maxLambda()*Math.pow(smoothness,4)
 
     var prev = null
     var first = null
