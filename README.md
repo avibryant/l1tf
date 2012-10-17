@@ -15,4 +15,6 @@ Where smoothness ranges from 0.0 (do nothing) to 1.0 (reduce the line to 3 or so
 
 The y_values are assumed to be evenly spaced.
 
+See http://avibryant.github.com/l1tf for a demo.
+
 License: MIT
