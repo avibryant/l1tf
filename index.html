@@ -40,13 +40,24 @@ The blue line below represents the log of the the S&amp;P 500 index for the peri
 <input id="range" type="range" min="0" max="1" step="0.0001" value="0.5" style="width:600px"/>
 <div id='examples'></div>
 <p>
+How does this work? It's trying to find a trend line that minimizes an error function in two parts:
+<ul>
+  <li>First, the total squared error of the trend line vs the original data.
+  <li>Second, the total absolute difference in slope between adjacent points.
+</ul>
+
+If we wanted to minimize only the first part, we'd just make our trend identical to the original data, and it would have 0 squared error. If we wanted to minimize only the second part, we'd just make our trend any straight line, and there would be 0 difference in slope all along it. Combining them forces us to find straight lines that don't deviate too far from the original data - and wherever they do start deviating, we have to pay the cost of adding a kink and changing the slope.
+<p>
+The smoothness parameter which the slider is controlling trades off between the two types of error: the farther you move it to the right, the less it cares about squared error and the more it cares about consistent slope.
+<p>
+
 The code is available on <a href="https://github.com/avibryant/l1tf">GitHub</a>. Example usage:
 <pre>
 var smoothness = 0.5
 var change_point_xy_pairs = l1tf(y_values, smoothness).points
 </pre>
 
-A note about smoothness: the error we are minimizing has two parts, one of which is just the squared error of the trend vs. the original data, the other of which is the total absolute difference in slope between adjacent points. A parameter (named lambda in the paper) controls how heavily the latter is weighted. There's a maximum lambda beyond which we just have a single line.
+A note about smoothness: the weight of the slope term in the error is named lambda in the paper. There's a maximum lambda beyond which we just have a single line.
 <p>
 Here, we set <pre>lambda = (smoothness<sup>4</sup>)(lambda_max)</pre> This is somewhat arbitrarily chosen to give a nice subjective feel of steadily increasing smoothness as it goes from 0 to 1.
 <p>
