@@ -7,4 +7,12 @@ Avi Bryant (Etsy) & Steven Noble (Shopify)
 
 Usage:
 
-change_point_xy_pairs = l1tf(y_values, lambda).points
+```javascript
+change_point_xy_pairs = l1tf(y_values, smoothness).points
+```
+
+Where smoothness ranges from 0.0 (do nothing) to 1.0 (reduce the line to 3 or so points).
+
+The y_values are assumed to be evenly spaced.
+
+License: MIT

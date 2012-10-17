@@ -41,12 +41,18 @@ var l1tf = (function() {
     this.baseErr = this.computeErr(0,0)
     var linDy = 0
 
-    if(this.prev && this.next)
+    // if(this.prev && this.prev.prev){
+    //   linDy = this.linearDy(this.prev.prev, this.prev)
+    //   this.tryMove(linDy, 0, false)
+    // }
+    // if(this.next && this.next.next){
+    //   linDy = this.linearDy(this.next, this.next.next)
+    //   this.tryMove(linDy, 0, false)
+    // }
+    if(this.prev && this.next){
       linDy = this.linearDy(this.prev, this.next)
-    else if(this.prev)
-      linDy = this.linearDy(this.prev.prev, this.prev)
-    else
-      linDy = this.linearDy(this.next, this.next.next)
+      this.tryMove(linDy, 0, true)
+    }
    
     if(linDy == 0){
       var scramble = 1
@@ -57,8 +63,6 @@ var l1tf = (function() {
     this.tryMove(scramble / 2, 0, false)
     this.tryMove(scramble / -2, 0, false)
     this.tryMove(scramble / -4, 0, false)
-
-    this.tryMove(linDy, 0, this.next && this.prev)
   
     var d2 = new Date()
     this.opt.errTime += (d2 - d1)
@@ -277,7 +281,7 @@ var l1tf = (function() {
     this.errDelta = 0
     this.errTime = 0
     this.real = array
-    this.m = m
+    this.m = this.maxLambda()*m
 
     var prev = null
     var first = null
@@ -306,6 +310,24 @@ var l1tf = (function() {
 
   Optimizer.prototype.getHeight = function() {
     return Math.ceil(Math.log(this.count+1)/Math.log(2)) - 1
+  }
+
+  Optimizer.prototype.maxLambda = function() {
+    var n = this.real.length;
+    var xSum = (n - 1) * n / 2;
+    var x2Sum = (2*n - 1)* (n - 1) * n / 6
+    var ySum = 0
+    var yxSum = 0
+    this.real.forEach(function(y, x){ySum += y; yxSum += y*x})
+    var slope = (yxSum - ySum*xSum/n)/(x2Sum - xSum*xSum/n)
+    var constant = (ySum - xSum*slope)/n
+
+    var maxDiff = 0
+    for(var x = 0; x < n; x += 1){
+      maxDiff = Math.max(Math.abs(x*slope + constant - this.real[x]), maxDiff)
+    }
+
+    return maxDiff*6*n
   }
 
   Optimizer.prototype.append = function(point) {
