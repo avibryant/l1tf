@@ -43,7 +43,7 @@ The blue line below represents the log of the the S&amp;P 500 index for the peri
 How does this work? It's trying to find a trend line that minimizes an error function in two parts:
 <ul>
   <li>First, the total squared error of the trend line vs the original data.
-  <li>Second, the total absolute difference in slope between adjacent points.
+  <li>Second, the total absolute difference in slope between adjacent points on the trend line.
 </ul>
 
 If we wanted to minimize only the first part, we'd just make our trend identical to the original data, and it would have 0 squared error. If we wanted to minimize only the second part, we'd just make our trend any straight line, and there would be 0 difference in slope all along it. Combining them forces us to find straight lines that don't deviate too far from the original data - and wherever they do start deviating, we have to pay the cost of adding a kink and changing the slope.
