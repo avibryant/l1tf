@@ -4,6 +4,16 @@ var l1tf = (function() {
     for(var i = 0; i < (array.length * 5) && opt.getRoot().err <= 0; i++) {
       opt.iterate()
     }
+    if(opt.points().length > 2){
+      var secondLast = opt.getLast().prev
+      var linDy = secondLast.linearDy(secondLast.prev, secondLast.next)
+      secondLast.forceMove(linDy, 0, true)
+      secondLast.bubble()
+      opt.iterate()
+      for(var i = 0; i < (array.length) && opt.getRoot().err <= 0; i++) {
+        opt.iterate()
+      }
+    }
 
     return {points: opt.points(), iterations: opt.iterations, errDelta: opt.errDelta, errTime: opt.errTime, err: opt.totalError()}
   }
@@ -24,9 +34,10 @@ var l1tf = (function() {
   Point.prototype.left = null
   Point.prototype.right = null
   Point.prototype.linear = false
+  Point.prototype.forced = false
 
   Point.prototype.lessThan = function(other) { 
-    return (this.err < other.err) ||
+    return this.forced || (this.err < other.err) ||
       (this.err == other.err && this.linear)
   }
 
@@ -142,6 +153,14 @@ var l1tf = (function() {
       this.err = errDelta
       this.linear = linear
     }
+  }
+
+  Point.prototype.forceMove = function(dy, dx, linear) {
+    var errDelta = this.computeErr(dy, dx) - this.baseErr
+    this.dy = dy
+    this.err = errDelta
+    this.linear = linear
+    this.forced = true
   }
  
   Point.prototype.move = function() {
@@ -269,8 +288,11 @@ var l1tf = (function() {
   Point.prototype.update = function(real) {
     var oldErr = this.err
     this.updateErr(real)
+    this.bubble(oldErr)
+  }
 
-    if(this.err < oldErr)
+  Point.prototype.bubble = function(oldErr) {
+    if(this.forced || this.err < oldErr)
       this.bubbleUp()
     else
       this.bubbleDown()
@@ -306,6 +328,14 @@ var l1tf = (function() {
       prev = prev.prev
       this.count += 1
     }
+  }
+
+  Optimizer.prototype.getLast = function() {
+    var candidate = this.first
+    while(candidate.next != null){
+      candidate = candidate.next
+    }
+    return candidate
   }
 
   Optimizer.prototype.getHeight = function() {
