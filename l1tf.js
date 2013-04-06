@@ -45,11 +45,13 @@ var l1tf = (function() {
       linDy = this.linearDy(this.prev.prev, this.prev)
       this.tryMove(linDy, 0, false)
       this.tryMove(linDy / 2, 0, false)
+      this.tryMove(linDy / 4, 0, false)
     }
     if(this.next && this.next.next){
       linDy = this.linearDy(this.next, this.next.next)
       this.tryMove(linDy, 0, false)
       this.tryMove(linDy / 2, 0, false)
+      this.tryMove(linDy / 4, 0, false)
     }
 
     if(this.prev && this.next){
@@ -76,18 +78,16 @@ var l1tf = (function() {
     var y = this.y + dy
     var x = this.x + dx
     var yd = real[x] - y
-    var err = yd*yd
+    var err = 0
     var m = this.opt.m
 
-    // if(!this.next){
-    //   debug('hello')
-    //   debug(real[x])
-    //   debug(y)
-    //   debug(dy)
-    //   debug(err)
-    // }
-
     var pslope, nslope
+
+    if(!this.prev || !this.next){
+      err += yd*yd / 2
+    }else{
+      err += yd*yd
+    }
 
     if(this.prev) {
       var px = this.prev.x
@@ -111,14 +111,6 @@ var l1tf = (function() {
         err += m * dslope
       }
     }
-
-    // if(!this.next){
-    //   debug('hello')
-    //   debug(real[x])
-    //   debug(y)
-    //   debug(dy)
-    //   debug(err)
-    // }
 
     if(this.next) {
       var nx = this.next.x
