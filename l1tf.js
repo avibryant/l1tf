@@ -173,7 +173,7 @@ var l1tf = (function() {
       }
 
       if(this.prev.prev) {
-        var ppslope = (y - this.prev.prev.y) / (x - this.prev.prev.x)
+        var ppslope = (this.prev.y - this.prev.prev.y) / (this.prev.x - this.prev.prev.x)
         var dslope = ppslope - pslope
         if(dslope < 0)
           dslope *= -1
@@ -196,7 +196,7 @@ var l1tf = (function() {
       }
 
       if(this.next.next) {
-        var nnslope = (y - this.next.next.y) / (x - this.next.next.x)
+        var nnslope = (this.next.y - this.next.next.y) / (this.next.x - this.next.next.x)
         var dslope = nslope - nnslope
         if(dslope < 0)
           dslope *= -1        
