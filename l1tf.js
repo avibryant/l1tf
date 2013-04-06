@@ -25,9 +25,14 @@ var l1tf = (function() {
   Point.prototype.right = null
   Point.prototype.linear = false
 
-  Point.prototype.lessThan = function(other) { 
-    return (this.err < other.err) ||
-      (this.err == other.err && this.linear)
+  Point.prototype.lessThan = function(other) {
+    if(this.linear && !other.linear){
+      return (this.dy == 0) || (this.err <= other.err)
+    }else if(!this.linear && other.linear) {
+      return (other.dy != 0) && (this.err < other.err)
+    }else{
+      return (this.err <= other.err)
+    }
   }
 
   Point.prototype.linearDy = function(l, r) {
@@ -37,40 +42,110 @@ var l1tf = (function() {
   Point.prototype.updateErr = function() {
     var d1 = new Date()
 
-    this.err = null
+    this.err = Infinity
     this.baseErr = this.computeErr(0,0)
     var linDy = 0
 
     if(this.prev && this.prev.prev){
       linDy = this.linearDy(this.prev.prev, this.prev)
       this.tryMove(linDy, 0, false)
-      this.tryMove(linDy / 2, 0, false)
-      this.tryMove(linDy / 4, 0, false)
+      // this.tryMove(linDy / 2, 0, false)
+      // this.tryMove(linDy / 4, 0, false)
     }
     if(this.next && this.next.next){
       linDy = this.linearDy(this.next, this.next.next)
       this.tryMove(linDy, 0, false)
-      this.tryMove(linDy / 2, 0, false)
-      this.tryMove(linDy / 4, 0, false)
+      // this.tryMove(linDy / 2, 0, false)
+      // this.tryMove(linDy / 4, 0, false)
     }
 
     if(this.prev && this.next){
       linDy = this.linearDy(this.prev, this.next)
       this.tryMove(linDy, 0, true)
+      // this.tryMove(linDy / 4, 0, false)
+      // this.tryMove(linDy / 2, 0, false)
+      // this.tryMove(linDy / -2, 0, false)
+      // this.tryMove(linDy / -4, 0, false)
     }
-   
-    if(linDy == 0){
-      var scramble = 1
-    }else{
-      var scramble = linDy
-    } 
-    this.tryMove(scramble / 4, 0, false)
-    this.tryMove(scramble / 2, 0, false)
-    this.tryMove(scramble / -2, 0, false)
-    this.tryMove(scramble / -4, 0, false)
+
+    var perfectMoves = this.perfectMoves()
+
+    var _i, _len;
+    for (_i = 0, _len = perfectMoves.length; _i < _len; _i++) {
+      this.tryMove(perfectMoves[_i] / 1, 0, false);
+      this.tryMove(perfectMoves[_i] / -1, 0, false);
+      this.tryMove(perfectMoves[_i] / 2, 0, false);
+      this.tryMove(perfectMoves[_i] / -2, 0, false);
+    }
   
     var d2 = new Date()
     this.opt.errTime += (d2 - d1)
+  }
+
+  Point.prototype.perfectMoves = function() {
+    var c = 0
+    var dyCoef = 0
+
+    var real = this.opt.real
+    var y = this.y
+    var x = this.x
+    c  += 2*(real[x] - y)
+    dyCoef += 2
+    var m = this.opt.m
+
+    if(this.prev) {
+      var px = this.prev.x
+      var py = this.prev.y
+ 
+      var j = px
+      while(j < x) {
+        c += 2*(real[j] - py)
+        dyCoef += 2*((x - j) / (x - px))
+        j++
+      }
+
+      // if(this.prev.prev) {
+      //   var ppslope = (y - this.prev.prev.y) / (x - this.prev.prev.x)
+      //   var dslope = ppslope - pslope
+      //   if(dslope < 0)
+      //     dslope *= -1
+      //   err += m * dslope
+      // }
+    }
+
+    if(this.next) {
+      var nx = this.next.x
+      var ny = this.next.y
+
+      var j = x + 1
+      while(j <= nx) {
+        c += 2*(real[j] - ny)
+        dyCoef += 2*((x - j) / (x - nx))
+        j++
+      }
+
+      // if(this.next.next) {
+      //   var nnslope = (y - this.next.next.y) / (x - this.next.next.x)
+      //   var dslope = nslope - nnslope
+      //   if(dslope < 0)
+      //     dslope *= -1        
+      //   err += m * dslope
+      // }
+    }
+
+    // if(this.prev && this.next) {
+    //   var dslope = pslope - nslope
+    //   if(dslope < 0)
+    //     dslope *= -1        
+
+    //   err += m * dslope
+    // }
+
+    if(dyCoef == 0){
+      return []
+    }else{
+      return [c/dyCoef]
+    }
   }
 
   Point.prototype.computeErr = function(dy,dx) {
@@ -78,16 +153,10 @@ var l1tf = (function() {
     var y = this.y + dy
     var x = this.x + dx
     var yd = real[x] - y
-    var err = 0
+    var err = yd*yd
     var m = this.opt.m
 
     var pslope, nslope
-
-    if(!this.prev || !this.next){
-      err += yd*yd / 2
-    }else{
-      err += yd*yd
-    }
 
     if(this.prev) {
       var px = this.prev.x
@@ -147,11 +216,13 @@ var l1tf = (function() {
   }
 
   Point.prototype.tryMove = function(dy, dx, linear) {
-    var errDelta = this.computeErr(dy, dx) - this.baseErr
-    if(!this.err || errDelta < this.err) {
-      this.dy = dy
-      this.err = errDelta
-      this.linear = linear
+    if(dy !=0 || linear){
+      var errDelta = this.computeErr(dy, dx) - this.baseErr
+      if(errDelta < this.err || (errDelta == this.err && linear)) {
+        this.dy = dy
+        this.err = errDelta
+        this.linear = linear
+      }
     }
   }
  
