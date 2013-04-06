@@ -9,6 +9,7 @@ var l1tf = (function() {
   }
 
   function Point(x,y,opt) {
+    this.err = Infinity
     this.x = x
     this.y = y
     this.opt = opt
@@ -49,23 +50,15 @@ var l1tf = (function() {
     if(this.prev && this.prev.prev){
       linDy = this.linearDy(this.prev.prev, this.prev)
       this.tryMove(linDy, 0, false)
-      // this.tryMove(linDy / 2, 0, false)
-      // this.tryMove(linDy / 4, 0, false)
     }
     if(this.next && this.next.next){
       linDy = this.linearDy(this.next, this.next.next)
       this.tryMove(linDy, 0, false)
-      // this.tryMove(linDy / 2, 0, false)
-      // this.tryMove(linDy / 4, 0, false)
     }
 
     if(this.prev && this.next){
       linDy = this.linearDy(this.prev, this.next)
       this.tryMove(linDy, 0, true)
-      // this.tryMove(linDy / 4, 0, false)
-      // this.tryMove(linDy / 2, 0, false)
-      // this.tryMove(linDy / -2, 0, false)
-      // this.tryMove(linDy / -4, 0, false)
     }
 
     var perfectMoves = this.perfectMoves()
@@ -73,9 +66,6 @@ var l1tf = (function() {
     var _i, _len;
     for (_i = 0, _len = perfectMoves.length; _i < _len; _i++) {
       this.tryMove(perfectMoves[_i] / 1, 0, false);
-      this.tryMove(perfectMoves[_i] / -1, 0, false);
-      this.tryMove(perfectMoves[_i] / 2, 0, false);
-      this.tryMove(perfectMoves[_i] / -2, 0, false);
     }
   
     var d2 = new Date()
@@ -83,14 +73,14 @@ var l1tf = (function() {
   }
 
   Point.prototype.perfectMoves = function() {
-    var c = 0
-    var dyCoef = 0
+    var c = [0]
+    var dyCoef = [0]
 
     var real = this.opt.real
     var y = this.y
     var x = this.x
-    c  += 2*(real[x] - y)
-    dyCoef += 2
+    c  = c.map(function(cVal){return cVal + 2*(real[x] - y)})
+    dyCoef = dyCoef.map(function(dVal){return dVal + 2})
     var m = this.opt.m
 
     if(this.prev) {
@@ -99,18 +89,15 @@ var l1tf = (function() {
  
       var j = px
       while(j < x) {
-        c += 2*(real[j] - py)
-        dyCoef += 2*((x - j) / (x - px))
+        c = c.map(function(cVal){return cVal + 2*(real[j] - py)})
+        dyCoef = dyCoef.map(function(dVal){return dVal + 2*((x - j) / (x - px))})
         j++
       }
 
-      // if(this.prev.prev) {
-      //   var ppslope = (y - this.prev.prev.y) / (x - this.prev.prev.x)
-      //   var dslope = ppslope - pslope
-      //   if(dslope < 0)
-      //     dslope *= -1
-      //   err += m * dslope
-      // }
+      if(this.prev.prev) {
+        c = c.concat(c.map(function(cVal){return cVal + 2 * m / (x - px)})).concat(c.map(function(cVal){return cVal - 2*m/(x - px)}))
+        dyCoef = dyCoef.concat(dyCoef).concat(dyCoef) 
+      }
     }
 
     if(this.next) {
@@ -119,33 +106,26 @@ var l1tf = (function() {
 
       var j = x + 1
       while(j <= nx) {
-        c += 2*(real[j] - ny)
-        dyCoef += 2*((x - j) / (x - nx))
+        c = c.map(function(cVal){return cVal + 2*(real[j] - ny)})
+        dyCoef = dyCoef.map(function(dVal){return dVal + 2*((x - j) / (x - nx))})
         j++
       }
 
-      // if(this.next.next) {
-      //   var nnslope = (y - this.next.next.y) / (x - this.next.next.x)
-      //   var dslope = nslope - nnslope
-      //   if(dslope < 0)
-      //     dslope *= -1        
-      //   err += m * dslope
-      // }
+      if(this.next.next) {
+        c = c.concat(c.map(function(cVal){return cVal + 2*m/(x - nx)})).concat(function(cVal){return cVal - 2*m/(x - nx)})
+        dyCoef = dyCoef.concat(dyCoef).concat(dyCoef)
+      }
     }
 
-    // if(this.prev && this.next) {
-    //   var dslope = pslope - nslope
-    //   if(dslope < 0)
-    //     dslope *= -1        
 
-    //   err += m * dslope
-    // }
-
-    if(dyCoef == 0){
-      return []
-    }else{
-      return [c/dyCoef]
+    moves = []
+    var _i, _len;
+    for (_i = 0, _len = dyCoef.length; _i < _len; _i++) {
+      if(dyCoef[_i] != 0 && c[_i] != 0){
+        moves.push(c[_i]/dyCoef[_i])
+      }
     }
+    return moves
   }
 
   Point.prototype.computeErr = function(dy,dx) {
