@@ -1,0 +1,11 @@
+f(m,n) = [[k/m for k=1:m], zeros(n-1)] + [zeros(m), [1 - k/n for k=1:(n-1)]]
+g(x,y,z) = [[f(x,y), zeros(z)] [zeros(x), f(y,z)]]
+h(x,y,z) = g(x,y,z)'g(x,y,z)
+
+sumOfConsecutiveSquares(x) = (x)*(x+1)*(2*x+1)/6
+h2(x,y,z) = [[sumOfConsecutiveSquares(x)/(x*x) + sumOfConsecutiveSquares(y)/(y*y) - 1, y*(y+1)/(2*y) - sumOfConsecutiveSquares(y)/(y*y)] [y*(y+1)/(2*y) - sumOfConsecutiveSquares(y)/(y*y), sumOfConsecutiveSquares(z)/(z*z) + sumOfConsecutiveSquares(y)/(y*y) - 1]]
+
+a11*x + a12*y = c1
+a12*x + a22*y = c2
+
+x = (c1 - c2*a12/a22)/(a11 - a12*a12/a22)

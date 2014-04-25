@@ -24,190 +24,133 @@ var l1tf = (function() {
   Point.prototype.parent = null
   Point.prototype.left = null
   Point.prototype.right = null
-  Point.prototype.linear = false
 
   Point.prototype.lessThan = function(other) {
-    if(this.linear && !other.linear){
-      return (this.dy == 0) || (this.err <= other.err)
-    }else if(!this.linear && other.linear) {
-      return (other.dy != 0) && (this.err < other.err)
-    }else{
-      return (this.err <= other.err)
-    }
-  }
-
-  Point.prototype.linearDy = function(l, r) {
-    return (l.y + (r.y - l.y) * (this.x - l.x) / (r.x - l.x)) - this.y
+    // if(this.linear && !other.linear){
+    //   return (this.dy == 0) || (this.err <= other.err)
+    // }else if(!this.linear && other.linear) {
+    //   return (other.dy != 0) && (this.err < other.err)
+    // }else{
+    return (this.err <= other.err)
+    // }
   }
 
   Point.prototype.updateErr = function() {
     var d1 = new Date()
 
     this.err = Infinity
-    this.baseErr = this.computeErr(0,0)
+    this.baseErr = this.computeErr(false)[2]
     var linDy = 0
 
-    if(this.prev && this.prev.prev){
-      linDy = this.linearDy(this.prev.prev, this.prev)
-      this.tryMove(linDy, 0, false)
-    }
-    if(this.next && this.next.next){
-      linDy = this.linearDy(this.next, this.next.next)
-      this.tryMove(linDy, 0, false)
-    }
-
-    if(this.prev && this.next){
-      linDy = this.linearDy(this.prev, this.next)
-      this.tryMove(linDy, 0, true)
-    }
-
-    var perfectMoves = this.perfectMoves()
-
-    var _i, _len;
-    for (_i = 0, _len = perfectMoves.length; _i < _len; _i++) {
-      this.tryMove(perfectMoves[_i] / 1, 0, false);
-    }
+    this.tryMove()
   
     var d2 = new Date()
     this.opt.errTime += (d2 - d1)
   }
 
-  Point.prototype.perfectMoves = function() {
-    var c = [0]
-    var dyCoef = [0]
-
+  Point.prototype.linearErr = function(x1,y1,x2,y2){
     var real = this.opt.real
-    var y = this.y
-    var x = this.x
-    c  = c.map(function(cVal){return cVal + 2*(real[x] - y)})
-    dyCoef = dyCoef.map(function(dVal){return dVal + 2})
-    var m = this.opt.m
-
-    if(this.prev) {
-      var px = this.prev.x
-      var py = this.prev.y
- 
-      var j = px
-      while(j < x) {
-        c = c.map(function(cVal){return cVal + 2*(real[j] - py)})
-        dyCoef = dyCoef.map(function(dVal){return dVal + 2*((x - j) / (x - px))})
-        j++
-      }
-
-      if(this.prev.prev) {
-        c = c.concat(c.map(function(cVal){return cVal + 2 * m / (x - px)})).concat(c.map(function(cVal){return cVal - 2*m/(x - px)}))
-        dyCoef = dyCoef.concat(dyCoef).concat(dyCoef) 
-      }
+    var err = 0
+    for(var i = 1; i < x2 - x1; i += 1){
+      var errComponent = real[x1 + i] - y1*(x2 - x1 - i)/(x2 - x1) - y2*i/(x2-x1)
+      err += errComponent*errComponent
     }
-
-    if(this.next) {
-      var nx = this.next.x
-      var ny = this.next.y
-
-      var j = x + 1
-      while(j <= nx) {
-        c = c.map(function(cVal){return cVal + 2*(real[j] - ny)})
-        dyCoef = dyCoef.map(function(dVal){return dVal + 2*((x - j) / (x - nx))})
-        j++
-      }
-
-      if(this.next.next) {
-        c = c.concat(c.map(function(cVal){return cVal + 2*m/(x - nx)})).concat(function(cVal){return cVal - 2*m/(x - nx)})
-        dyCoef = dyCoef.concat(dyCoef).concat(dyCoef)
-      }
-    }
-
-
-    moves = []
-    var _i, _len;
-    for (_i = 0, _len = dyCoef.length; _i < _len; _i++) {
-      if(dyCoef[_i] != 0 && c[_i] != 0){
-        moves.push(c[_i]/dyCoef[_i])
-      }
-    }
-    return moves
-  }
-
-  Point.prototype.computeErr = function(dy,dx) {
-    var real = this.opt.real
-    var y = this.y + dy
-    var x = this.x + dx
-    var yd = real[x] - y
-    var err = yd*yd
-    var m = this.opt.m
-
-    var pslope, nslope
-
-    if(this.prev) {
-      var px = this.prev.x
-      var py = this.prev.y
-      var pxd = x - px
-      var pyd = y - py
-      pslope = pyd/pxd
- 
-      var j = px
-      while(j < x) {
-        var d = real[j] - (py + pslope*(j-px))
-        err += d*d
-        j++
-      }
-
-      if(this.prev.prev) {
-        var ppslope = (this.prev.y - this.prev.prev.y) / (this.prev.x - this.prev.prev.x)
-        var dslope = ppslope - pslope
-        if(dslope < 0)
-          dslope *= -1
-        err += m * dslope
-      }
-    }
-
-    if(this.next) {
-      var nx = this.next.x
-      var ny = this.next.y
-      var nxd = x - nx
-      var nyd = y - ny
-      nslope = nyd/nxd
-
-      var j = x + 1
-      while(j <= nx) {
-        var d = real[j] - (ny + nslope*(j-nx))
-        err += d*d
-        j++
-      }
-
-      if(this.next.next) {
-        var nnslope = (this.next.y - this.next.next.y) / (this.next.x - this.next.next.x)
-        var dslope = nslope - nnslope
-        if(dslope < 0)
-          dslope *= -1        
-        err += m * dslope
-      }
-    }
-
-    if(this.prev && this.next) {
-      var dslope = pslope - nslope
-      if(dslope < 0)
-        dslope *= -1        
-
-      err += m * dslope
-    }
-
     return err
   }
 
-  Point.prototype.tryMove = function(dy, dx, linear) {
-    if(dy !=0 || linear){
-      var errDelta = this.computeErr(dy, dx) - this.baseErr
-      if(errDelta < this.err || (errDelta == this.err && linear)) {
-        this.dy = dy
-        this.err = errDelta
-        this.linear = linear
+  Point.prototype.pointErr = function(x,y){
+    var real = this.opt.real
+    return (real[x] - y)*(real[x] - y)
+  }
+
+  Point.prototype.computeErr = function(remove) {
+    if(remove && (!this.next || !this.prev)){
+      return [null, null, Infinity]
+    }
+
+    if(!remove && (!this.next || !this.prev)){
+      return [null, null, 0]
+    }
+
+    var real = this.opt.real
+    var m = this.opt.m
+
+    if(!remove){
+      var err = m
+      err += this.pointErr(this.x, this.y)
+      err += this.linearErr(this.prev.x, this.prev.y, this.x, this.y)
+      err += this.pointErr(this.prev.x, this.prev.y)
+      err += this.linearErr(this.x, this.y, this.next.x, this.next.y)
+      err += this.pointErr(this.next.x, this.next.y)
+      if(this.prev.prev){
+        err += this.linearErr(this.prev.prev.x, this.prev.prev.y, this.prev.x, this.prev.y)
       }
+      if(this.next.next){
+        err += this.linearErr(this.next.x, this.next.y, this.next.next.x, this.next.next.y)
+      }
+      return [this.prev.y, this.next.y, err]
+    }
+
+    var d12 = this.prev.prev ? this.prev.x - this.prev.prev.x : 1
+    var d24 = this.next.x - this.prev.x
+    var d45 = this.next.next ? this.next.next.x - this.next.x : 1
+
+    var c1 = 0
+    var c2 = 0
+
+    if(this.prev.prev){
+      for(var i = 1; i < d12; i += 1){
+        var adjustedRealY = real[this.prev.prev.x + i] - this.prev.prev.y*(1 - i / d12)
+        c1 += (i / d12) * adjustedRealY
+      }
+    }
+    for(var i = 0; i <= d24; i += 1){
+      c1 += (1 - i / d24)*(real[this.prev.x + i])
+      c2 += (i / d24)*(real[this.prev.x + i])
+    }
+    if(this.next.next){
+      for(var i = 1; i < d45; i += 1){
+        var adjustedRealY = real[this.next.x + i] - this.next.next.y*(i / d45)
+        c2 += (1 - i / d45) * adjustedRealY
+      }
+    }
+
+    var sumOfConsecutiveSquares = function(n){ return (n)*(n+1)*(2*n+1)/6 }
+    var a11 = sumOfConsecutiveSquares(d12)/(d12*d12) + sumOfConsecutiveSquares(d24)/(d24*d24) - 1
+    var a22 = sumOfConsecutiveSquares(d24)/(d24*d24) + sumOfConsecutiveSquares(d45)/(d45*d45) - 1
+    var a12 = d24*(d24+1)/(2*d24) - sumOfConsecutiveSquares(d24)/(d24*d24)
+
+    var newPrevY = (c1 - c2*a12/a22)/(a11 - a12*a12/a22)
+    var newNextY = (c2 - a12*newPrevY)/a22
+
+    var err = 0
+
+    err += this.linearErr(this.prev.x, newPrevY, this.next.x, newNextY)
+    err += this.pointErr(this.prev.x, newPrevY)
+    err += this.pointErr(this.next.x, newNextY)
+    if(this.prev.prev){
+      err += this.linearErr(this.prev.prev.x, this.prev.prev.y, this.prev.x, newPrevY)
+    }
+    if(this.next.next){
+      err += this.linearErr(this.next.x, this.next.y, this.next.next.x, newNextY)
+    }
+
+    return [newPrevY, newNextY, err]
+  }
+
+  Point.prototype.tryMove = function() {
+    var prevNextErr = this.computeErr(true)
+    var errDelta = prevNextErr[2] - this.baseErr
+    if(errDelta < this.err) {
+      this.newPrevY = prevNextErr[0]
+      this.newNextY = prevNextErr[1]
+      this.err = errDelta
     }
   }
  
   Point.prototype.move = function() {
-    this.y += this.dy
+    this.prev.y = this.newPrevY
+    this.next.y = this.newNextY
   }
 
   Point.prototype.setPrev = function(point) {
@@ -330,7 +273,7 @@ var l1tf = (function() {
 
   Point.prototype.update = function(real) {
     var oldErr = this.err
-    this.updateErr(real)
+    this.updateErr()
 
     if(this.err < oldErr)
       this.bubbleUp()
@@ -343,7 +286,8 @@ var l1tf = (function() {
     this.errDelta = 0
     this.errTime = 0
     this.real = array
-    this.m = this.maxLambda()*Math.pow(smoothness,4)
+    this.m = Math.exp((smoothness-0.5)*20)
+    console.log(smoothness, this.m)
 
     var prev = null
     var first = null
@@ -358,11 +302,11 @@ var l1tf = (function() {
     this.first = first
     this.setRoot(prev)
     this.count = 1
-    prev.updateErr(this.real)
+    prev.updateErr()
 
     prev = prev.prev
     while(prev != null) {
-      prev.updateErr(this.real)
+      prev.updateErr()
       this.append(prev)
       prev.bubbleUp()
       prev = prev.prev
@@ -430,22 +374,18 @@ var l1tf = (function() {
     this.errDelta += root.err
 
     root.move()
-    if(root.linear) {
-      root.unlink()
-      this.removeRoot()
-    }
-    else
-      root.update(this.real)
+    root.unlink()
+    this.removeRoot()
 
     if(root.prev) {
-      root.prev.update(this.real)
+      root.prev.update()
       if(root.prev.prev)
-        root.prev.prev.update(this.real)
+        root.prev.prev.update()
     }
     if(root.next) {
-      root.next.update(this.real)
+      root.next.update()
       if(root.next.next)
-        root.next.next.update(this.real)
+        root.next.next.update()
     }
     this.iterations += 1
   }
@@ -473,14 +413,13 @@ var l1tf = (function() {
     var err = 0
     var point = this.first
     while(point) {
-      err += point.computeErr(0,0)
-      var d = (point.y - this.real[point.x])
-      err -= (d*d)
-      if(point.prev && point.next)
-        err -= (d*d)
+      err += point.pointErr(point.x, point.y)
+      err += this.m
+      if(point.next){
+        point.linearErr(point.x, point.y, point.next.x, point.next.y)
+      }
       point = point.next
     }
-
     return err
   }
 
